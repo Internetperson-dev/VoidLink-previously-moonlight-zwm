@@ -16,19 +16,27 @@ jobs:
           submodules: recursive
       - name: Checkout submodules
         run: git submodule update --init --recursive
-      - name: Fetch upstream project and Swift files
+      - name: Fetch upstream project and all VoidLink files
         run: |
           curl -L -o /tmp/voidlink.tar.gz \
             "https://github.com/The-Fried-Fish/VoidLink-previously-moonlight-zwm/archive/refs/heads/noWaterMark.tar.gz"
           tar -xzf /tmp/voidlink.tar.gz -C /tmp/
           cp -r /tmp/VoidLink-previously-moonlight-zwm-noWaterMark/Moonlight.xcodeproj .
-          # Copy missing Swift files that VoidLink added
-          cp -rn /tmp/VoidLink-previously-moonlight-zwm-noWaterMark/Limelight/Input/CommandManager.swift Limelight/Input/ 2>/dev/null || true
-          cp -rn /tmp/VoidLink-previously-moonlight-zwm-noWaterMark/Limelight/Input/OnScreenWidgetView.swift Limelight/Input/ 2>/dev/null || true
-          cp -rn /tmp/VoidLink-previously-moonlight-zwm-noWaterMark/Limelight/ViewControllers/CommandManagerViewController.swift Limelight/ViewControllers/ 2>/dev/null || true
+          
+          # Copy all VoidLink-added Swift files to Limelight/
+          cp -rn /tmp/VoidLink-previously-moonlight-zwm-noWaterMark/Limelight/CommandManager.swift Limelight/ 2>/dev/null || true
+          cp -rn /tmp/VoidLink-previously-moonlight-zwm-noWaterMark/Limelight/OnScreenWidgetView.swift Limelight/ 2>/dev/null || true
           cp -rn /tmp/VoidLink-previously-moonlight-zwm-noWaterMark/Limelight/OrientationHelper.swift Limelight/ 2>/dev/null || true
-          cp -rn /tmp/VoidLink-previously-moonlight-zwm-noWaterMark/Limelight/Localization/SwiftLocalizationHelper.swift Limelight/Localization/ 2>/dev/null || true
+          cp -rn /tmp/VoidLink-previously-moonlight-zwm-noWaterMark/Limelight/CommandManagerViewController.swift Limelight/ViewControllers/ 2>/dev/null || true
+          cp -rn /tmp/VoidLink-previously-moonlight-zwm-noWaterMark/Limelight/SwiftLocalizationHelper.swift Limelight/Localization/ 2>/dev/null || true
           cp -rn /tmp/VoidLink-previously-moonlight-zwm-noWaterMark/Limelight/Moonlight-Bridging-Header.h Limelight/ 2>/dev/null || true
+          
+          # Also copy custom ObjC files
+          cp -rn /tmp/VoidLink-previously-moonlight-zwm-noWaterMark/Limelight/Input/CustomTapGestureRecognizer.* Limelight/Input/ 2>/dev/null || true
+          cp -rn /tmp/VoidLink-previously-moonlight-zwm-noWaterMark/Limelight/Input/CustomEdgeSlideGestureRecognizer.* Limelight/Input/ 2>/dev/null || true
+          cp -rn /tmp/VoidLink-previously-moonlight-zwm-noWaterMark/Limelight/NativeTouchHandler.* Limelight/Input/ 2>/dev/null || true
+          cp -rn /tmp/VoidLink-previously-moonlight-zwm-noWaterMark/Limelight/NativeTouchPointer.* Limelight/Input/ 2>/dev/null || true
+          
           rm -rf /tmp/voidlink.tar.gz /tmp/VoidLink-previously-moonlight-zwm-noWaterMark
       - name: Patch OpenSSL for Xcode 16 compatibility
         run: |
