@@ -1,21 +1,26 @@
 name: Xcode - Build IPA
+
 on:
   push:
     branches: [ "noWaterMark" ]
   pull_request:
     branches: [ "noWaterMark" ]
   workflow_dispatch:
+
 jobs:
   build:
     name: Build IPA
     runs-on: macos-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           submodules: recursive
+
       - name: Checkout submodules
         run: git submodule update --init --recursive
+
       - name: Fetch Moonlight.xcodeproj
         run: |
           if [ ! -d "Moonlight.xcodeproj" ]; then
@@ -25,8 +30,19 @@ jobs:
             cp -r /tmp/moonlight-ios-master/Moonlight.xcodeproj .
             rm -rf /tmp/limelight.tar.gz /tmp/moonlight-ios-master
           fi
+
+      - name: Patch OpenSSL for Xcode 16 compatibility
+        run: |
+          # Add missing include to OpenSSL headers
+          for f in libs/OpenSSL.xcframework/*/Headers/openssl/*.h; do
+            if ! grep -q '#include <sys/time.h>' "$f" 2>/dev/null; then
+              sed -i '' '1i #include <sys/time.h>' "$f"
+            fi
+          done
+
       - name: List schemes
         run: xcodebuild -project Moonlight.xcodeproj -list
+
       - name: Build
         run: |
           xcodebuild -project Moonlight.xcodeproj \
@@ -37,11 +53,13 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO
+
       - name: Create IPA
         run: |
           mkdir -p ./build/IPA/Payload
           cp -r ./build/Moonlight.xcarchive/Products/Applications/Moonlight.app ./build/IPA/Payload/Moonlight.app
           cd ./build/IPA && zip -r ../../build/Moonlight.ipa ./Payload/*
+
       - name: Upload IPA to Artifacts
         uses: actions/upload-artifact@v4
         with:
