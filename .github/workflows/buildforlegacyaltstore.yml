@@ -12,14 +12,14 @@ jobs:
     steps:
       - name: Checkout VoidLink fork with submodules
         run: |
-          rm -rf Limelight libs Moonlight.xcodeproj "Supporting Files" "Base.lproj" *.xib *.storyboard X1Kit moonlight-common VoidLink
+          rm -rf Limelight libs Moonlight.xcodeproj "Supporting Files" "Base.lproj" *.xib *.storyboard X1Kit moonlight-common VoidLink third_party imgui
           git clone --recursive -b iOS26UI https://github.com/The-Fried-Fish/VoidLink-previously-moonlight-zwm.git /tmp/voidlink
           cp -r /tmp/voidlink/VoidLink.xcodeproj .
           cp -r /tmp/voidlink/VoidLink .
           cp -r /tmp/voidlink/libs .
           cp -r /tmp/voidlink/X1Kit .
           cp -r /tmp/voidlink/moonlight-common .
-          cp -r /tmp/voidlink/ImGui .
+          cp -r /tmp/voidlink/third_party/imgui .
           cp -r /tmp/voidlink/Launch\ Screen.xib .
           mkdir -p "Moonlight TV" && cp /tmp/voidlink/Moonlight\ TV/* "Moonlight TV/" 2>/dev/null || true
           mkdir -p "Supporting Files" && cp /tmp/voidlink/Supporting\ Files/* "Supporting Files/" 2>/dev/null || true
