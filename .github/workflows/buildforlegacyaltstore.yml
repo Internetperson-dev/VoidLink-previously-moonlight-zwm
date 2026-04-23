@@ -44,43 +44,51 @@ jobs:
             fi
           done
 
-      - name: Create private API stubs patch
+      - name: Apply patches for iOS 16 compatibility
         run: |
-          mkdir -p VoidLink/PrivateHeaders
-          cat > VoidLink/PrivateHeaders/iOS26Private.h << 'EOF'
-          #ifndef iOS26Private_h
-          #define iOS26Private_h
-
-          #import <UIKit/UIKit.h>
-
-          #if !defined(__has_include) || !__has_feature(objc_fixed_size)
-          @interface UIBarButtonItem (iOS26Private)
-          @property (nonatomic, assign) BOOL hidesSharedBackground;
-          @end
-          #endif
-
-          #if !defined(__has_include) || !__has_feature(objc_fixed_size)
-          typedef NS_ENUM(NSInteger, UIGlassEffectStyle) {
-              UIGlassEffectStyleLight,
-              UIGlassEffectStyleClear,
-          };
-
-          @interface UIGlassEffect : UIVisualEffect
-          @property (nonatomic, readonly) UIGlassEffectStyle style;
-          + (UIGlassEffect *)effectWithStyle:(UIGlassEffectStyle)style;
-          @end
-          #endif
-
-          #endif
-          EOF
-
-      - name: Apply patch to StreamView.m
-        run: |
-          if grep -q '#import "iOS26Private.h"' VoidLink/Input/StreamView.m; then
-            echo "Patch already applied"
-          else
-            sed -i '' 's/#import "StreamView.h"/#import "StreamView.h"\n#import "iOS26Private.h"/' VoidLink/Input/StreamView.m
-          fi
+          curl -sL "https://raw.githubusercontent.com/The-Fried-Fish/VoidLink-previously-moonlight-zwm/iOS26UI/VoidLink/Input/StreamView.m" > /tmp/StreamView.m.original
+          
+          cat > /tmp/patch.py << 'PYEOF'
+          import re
+          with open('/tmp/StreamView.m.original', 'r') as f:
+              content = f.read()
+          
+          old_code = '''            if (GenericUtils.liquidGlassEnabled) {
+                if (@available(iOS 26.0, *)) {
+                    for(UIBarButtonItem *button in customToolbarView.items){
+                        button.hidesSharedBackground = true;
+                    }
+                    // customToolbarView.barTintColor = UIColor.systemGrayColor;
+                    customToolbarView.backgroundColor = [UIColor.blackColor colorWithAlphaComponent:0.3];
+                    customToolbarView.layer.cornerRadius = customToolbarView.bounds.size.height/2;
+                    customToolbarView.layer.masksToBounds = true;
+                    
+                    UIVisualEffectView *glassView =
+                    [[UIVisualEffectView alloc] initWithEffect:[UIGlassEffect effectWithStyle:UIGlassEffectStyleClear]];
+                    glassView.frame = customToolbarView.bounds;
+                    glassView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+                    [customToolbarView addSubview:glassView];
+                    [customToolbarView sendSubviewToBack:glassView];
+                }
+            }'''
+          
+          new_code = '''            if (GenericUtils.liquidGlassEnabled) {
+                UIBlurEffect *blurEffect = [UIBlurEffect effectWithStyle:UIBlurEffectStyleDark];
+                UIVisualEffectView *glassView = [[UIVisualEffectView alloc] initWithEffect:blurEffect];
+                glassView.frame = customToolbarView.bounds;
+                glassView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+                [customToolbarView addSubview:glassView];
+                [customToolbarView sendSubviewToBack:glassView];
+                customToolbarView.backgroundColor = [UIColor clearColor];
+            }'''
+          
+          content = content.replace(old_code, new_code)
+          
+          with open('VoidLink/Input/StreamView.m', 'w') as f:
+              f.write(content)
+          PYEOF
+          
+          python3 /tmp/patch.py
       - name: List schemes
         run: xcodebuild -project VoidLink.xcodeproj -list
       - name: Build
@@ -91,8 +99,7 @@ jobs:
             -configuration Release \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO \
-            HEADER_SEARCH_PATHS='$(inherited) "$(SRCROOT)/VoidLink/PrivateHeaders/"'
+            CODE_SIGNING_ALLOWED=NO
       - name: Create IPA
         run: |
           mkdir -p ./build/IPA/Payload
