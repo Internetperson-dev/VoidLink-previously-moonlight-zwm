@@ -1,26 +1,21 @@
 name: Xcode - Build IPA
-
 on:
   push:
     branches: [ "noWaterMark" ]
   pull_request:
     branches: [ "noWaterMark" ]
   workflow_dispatch:
-
 jobs:
   build:
     name: Build IPA
     runs-on: macos-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           submodules: recursive
-
       - name: Checkout submodules
         run: git submodule update --init --recursive
-
       - name: Fetch Moonlight.xcodeproj from upstream
         run: |
           # Download from The-Fried-Fish repo's noWaterMark branch (has xcodeproj)
@@ -29,7 +24,6 @@ jobs:
           tar -xzf /tmp/voidlink.tar.gz -C /tmp/
           cp -r /tmp/VoidLink-previously-moonlight-zwm-noWaterMark/Moonlight.xcodeproj .
           rm -rf /tmp/voidlink.tar.gz /tmp/VoidLink-previously-moonlight-zwm-noWaterMark
-
       - name: Patch OpenSSL for Xcode 16 compatibility
         run: |
           for f in libs/OpenSSL.xcframework/*/Headers/openssl/crypto.h; do
@@ -37,10 +31,8 @@ jobs:
               printf '#include <sys/time.h>\n%s\n' "$(cat "$f")" > "$f"
             fi
           done
-
       - name: List schemes
         run: xcodebuild -project Moonlight.xcodeproj -list
-
       - name: Build
         run: |
           xcodebuild -project Moonlight.xcodeproj \
@@ -51,13 +43,11 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO
-
       - name: Create IPA
         run: |
           mkdir -p ./build/IPA/Payload
           cp -r ./build/Moonlight.xcarchive/Products/Applications/Moonlight.app ./build/IPA/Payload/Moonlight.app
           cd ./build/IPA && zip -r ../../build/Moonlight.ipa ./Payload/*
-
       - name: Upload IPA to Artifacts
         uses: actions/upload-artifact@v4
         with:
