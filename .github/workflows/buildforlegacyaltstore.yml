@@ -28,11 +28,16 @@ jobs:
           tar -xzf /tmp/voidlink.tar.gz -C /tmp/
           cp -r /tmp/VoidLink-previously-moonlight-zwm-noWaterMark/Moonlight.xcodeproj .
           
-          # Copy VoidLink-added Swift files
-          cp -rn /tmp/VoidLink-previously-moonlight-zwm-noWaterMark/Limelight/SwiftLocalizationHelper.swift Limelight/Localization/ 2>/dev/null || true
-          cp -rn /tmp/VoidLink-previously-moonlight-zwm-noWaterMark/Limelight/OrientationHelper.swift Limelight/ 2>/dev/null || true
-          cp -rn /tmp/VoidLink-previously-moonlight-zwm-noWaterMark/Limelight/CommandManagerViewController.swift Limelight/ViewControllers/ 2>/dev/null || true
-          cp -rn /tmp/VoidLink-previously-moonlight-zwm-noWaterMark/Limelight/Moonlight-Bridging-Header.h Limelight/ 2>/dev/null || true
+          # Create missing directories first
+          mkdir -p Limelight/Input Limelight/ViewControllers Limelight/Localization
+          
+          # Copy Swift files from upstream
+          cp /tmp/VoidLink-previously-moonlight-zwm-noWaterMark/Limelight/Input/CommandManager.swift Limelight/Input/
+          cp /tmp/VoidLink-previously-moonlight-zwm-noWaterMark/Limelight/Input/OnScreenWidgetView.swift Limelight/Input/
+          cp /tmp/VoidLink-previously-moonlight-zwm-noWaterMark/Limelight/ViewControllers/CommandManagerViewController.swift Limelight/ViewControllers/
+          cp /tmp/VoidLink-previously-moonlight-zwm-noWaterMark/Limelight/Localization/SwiftLocalizationHelper.swift Limelight/Localization/
+          cp /tmp/VoidLink-previously-moonlight-zwm-noWaterMark/Limelight/OrientationHelper.swift Limelight/
+          cp /tmp/VoidLink-previously-moonlight-zwm-noWaterMark/Limelight/Moonlight-Bridging-Header.h Limelight/
           
           rm -rf /tmp/voidlink.tar.gz /tmp/VoidLink-previously-moonlight-zwm-noWaterMark
 
