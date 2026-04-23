@@ -37,25 +37,21 @@ jobs:
             echo "type=project" >> $GITHUB_OUTPUT
             echo "file=$(find . -name '*.xcodeproj' -type d | head -n 1)" >> $GITHUB_OUTPUT
           fi
-          echo "Found: ${{ steps.project.outputs.type }} - ${{ steps.project.outputs.file }}"
 
-      - name: 🔍 List schemes
+      - name: 🔍 List schemes and targets
+        id: list
         run: |
           PROJECT_FILE="${{ steps.project.outputs.file }}"
           if [ -z "$PROJECT_FILE" ]; then
             echo "No project found"
             exit 1
           fi
-          if [ "${{ steps.project.outputs.type }}" = "workspace" ]; then
-            xcodebuild -workspace "$PROJECT_FILE" -list
-          else
-            xcodebuild -project "$PROJECT_FILE" -list
-          fi
+          echo "=== Schemes ===" >> $GITHUB_STEP_SUMMARY
+          xcodebuild -project "$PROJECT_FILE" -list 2>&1 | tee -a $GITHUB_STEP_SUMMARY
+          echo "=== Targets ===" >> $GITHUB_STEP_SUMMARY
+          xcodebuild -project "$PROJECT_FILE" -list 2>&1 | grep -A 100 "Targets:" | tee -a $GITHUB_STEP_SUMMARY
 
-      - name: ⚙ Set scheme
-        run: echo "SCHEME=Moonlight" >> $GITHUB_ENV
-
-      - name: 🏗 Build archive
+      - name: 🏗️ Build archive
         run: |
           PROJECT_FILE="${{ steps.project.outputs.file }}"
           if [ "${{ steps.project.outputs.type }}" = "workspace" ]; then
@@ -118,7 +114,3 @@ jobs:
         with:
           name: VoidLink-IPA
           path: build/export/*.ipa
-
-
-
-
