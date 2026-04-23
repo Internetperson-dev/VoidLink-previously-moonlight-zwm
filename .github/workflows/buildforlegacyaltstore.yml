@@ -79,7 +79,7 @@ jobs:
           if grep -q '#import "iOS26Private.h"' VoidLink/Input/StreamView.m; then
             echo "Patch already applied"
           else
-            sed -i '' 's/#import "StreamView.h"/#import "StreamView.h"\n#import "PrivateHeaders\/iOS26Private.h"/' VoidLink/Input/StreamView.m
+            sed -i '' 's/#import "StreamView.h"/#import "StreamView.h"\n#import "iOS26Private.h"/' VoidLink/Input/StreamView.m
           fi
       - name: List schemes
         run: xcodebuild -project VoidLink.xcodeproj -list
@@ -92,7 +92,7 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
-            HEADER_SEARCH_PATHS='$(inherited) "$(SRCROOT)/VoidLink/PrivateHeaders"'
+            HEADER_SEARCH_PATHS='$(inherited) "$(SRCROOT)/VoidLink/PrivateHeaders/"'
       - name: Create IPA
         run: |
           mkdir -p ./build/IPA/Payload
