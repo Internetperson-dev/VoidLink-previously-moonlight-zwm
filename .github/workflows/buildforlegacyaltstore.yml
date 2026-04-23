@@ -47,7 +47,7 @@ jobs:
         run: |
           for f in libs/OpenSSL.xcframework/*/Headers/openssl/crypto.h; do
             if [ -f "$f" ] && ! grep -q '#include <sys/time.h>' "$f"; then
-              sed -i '' '1s/^/#include <sys/time.h>\n/' "$f"
+              (echo '#include <sys/time.h>'; cat "$f") > "$f.tmp" && mv "$f.tmp" "$f"
             fi
           done
       - name: List schemes
