@@ -12,11 +12,13 @@ jobs:
     steps:
       - name: Checkout original moonlight-ios with submodules
         run: |
-          rm -rf Limelight libs Moonlight.xcodeproj "Supporting Files" "Base.lproj"
+          rm -rf Limelight libs Moonlight.xcodeproj "Supporting Files" "Base.lproj" *.xib *.storyboard
           git clone --recursive https://github.com/moonlight-stream/moonlight-ios.git /tmp/moonlight-ios
           cp -r /tmp/moonlight-ios/Moonlight.xcodeproj .
           cp -r /tmp/moonlight-ios/Limelight .
           cp -r /tmp/moonlight-ios/libs .
+          cp -r /tmp/moonlight-ios/*.xib .
+          cp -r /tmp/moonlight-ios/*.storyboard .
           mkdir -p "Supporting Files" && cp /tmp/moonlight-ios/Supporting\ Files/* "Supporting Files/" 2>/dev/null || true
           mkdir -p "Base.lproj" && cp /tmp/moonlight-ios/Base.lproj/* "Base.lproj/" 2>/dev/null || true
           rm -rf /tmp/moonlight-ios
