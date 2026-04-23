@@ -43,10 +43,10 @@ jobs:
             fi
           done
       - name: List schemes
-        run: xcodebuild -project Moonlight.xcodeproj -list
+        run: xcodebuild -project VoidLink.xcodeproj -list
       - name: Build
         run: |
-          xcodebuild -project Moonlight.xcodeproj \
+          xcodebuild -project VoidLink.xcodeproj \
             -scheme VoidLink \
             -sdk iphonesimulator \
             -configuration Release \
