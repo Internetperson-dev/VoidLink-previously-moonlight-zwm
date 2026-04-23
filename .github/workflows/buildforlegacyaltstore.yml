@@ -1,4 +1,4 @@
-name: Build VoidLink IPA (AltStore)
+name: Build VoidLink IPA
 
 on:
   workflow_dispatch:
@@ -11,8 +11,11 @@ jobs:
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: 🔁 Init submodules
+        if: github.event_name == 'push'
         run: git submodule update --init --recursive
 
       - name: 🧰 Select Xcode
@@ -21,37 +24,43 @@ jobs:
       - name: 🔍 Show Xcode version
         run: xcodebuild -version
 
-      # 🧠 Detect project automatically (this repo doesn't use CocoaPods by default)
       - name: 📦 Find project
         id: project
         run: |
           if ls *.xcworkspace 1> /dev/null 2>&1; then
             echo "type=workspace" >> $GITHUB_OUTPUT
             echo "file=$(ls *.xcworkspace | head -n 1)" >> $GITHUB_OUTPUT
-          else
+          elif ls *.xcodeproj 1> /dev/null 2>&1; then
             echo "type=project" >> $GITHUB_OUTPUT
             echo "file=$(ls *.xcodeproj | head -n 1)" >> $GITHUB_OUTPUT
+          else
+            echo "type=project" >> $GITHUB_OUTPUT
+            echo "file=$(find . -name '*.xcodeproj' -type d | head -n 1)" >> $GITHUB_OUTPUT
           fi
+          echo "Found: ${{ steps.project.outputs.type }} - ${{ steps.project.outputs.file }}"
 
       - name: 🔍 List schemes
         run: |
+          PROJECT_FILE="${{ steps.project.outputs.file }}"
+          if [ -z "$PROJECT_FILE" ]; then
+            echo "No project found"
+            exit 1
+          fi
           if [ "${{ steps.project.outputs.type }}" = "workspace" ]; then
-            xcodebuild -workspace "${{ steps.project.outputs.file }}" -list
+            xcodebuild -workspace "$PROJECT_FILE" -list
           else
-            xcodebuild -project "${{ steps.project.outputs.file }}" -list
+            xcodebuild -project "$PROJECT_FILE" -list
           fi
 
-      # ⚠️ IMPORTANT: You MUST SET THIS after first run
-      - name: ⚙️ Set scheme (EDIT THIS)
-        run: |
-          echo "SCHEME=Moonlight" >> $GITHUB_ENV
+      - name: ⚙ Set scheme
+        run: echo "SCHEME=Moonlight" >> $GITHUB_ENV
 
-      # 🏗️ Build archive (real device)
-      - name: 🏗️ Build archive
+      - name: 🏗 Build archive
         run: |
+          PROJECT_FILE="${{ steps.project.outputs.file }}"
           if [ "${{ steps.project.outputs.type }}" = "workspace" ]; then
             xcodebuild \
-              -workspace "${{ steps.project.outputs.file }}" \
+              -workspace "$PROJECT_FILE" \
               -scheme "$SCHEME" \
               -configuration Release \
               -sdk iphoneos \
@@ -62,7 +71,7 @@ jobs:
               CODE_SIGN_IDENTITY=""
           else
             xcodebuild \
-              -project "${{ steps.project.outputs.file }}" \
+              -project "$PROJECT_FILE" \
               -scheme "$SCHEME" \
               -configuration Release \
               -sdk iphoneos \
@@ -73,7 +82,6 @@ jobs:
               CODE_SIGN_IDENTITY=""
           fi
 
-      # 📄 Create ExportOptions.plist dynamically
       - name: 📄 Create ExportOptions.plist
         run: |
           cat <<EOF > ExportOptions.plist
@@ -96,7 +104,6 @@ jobs:
           </plist>
           EOF
 
-      # 📦 Export IPA
       - name: 📦 Export IPA
         run: |
           mkdir -p build/export
@@ -106,9 +113,12 @@ jobs:
             -exportOptionsPlist ExportOptions.plist \
             CODE_SIGNING_ALLOWED=NO
 
-      # 📤 Upload artifact
       - name: 📤 Upload IPA
         uses: actions/upload-artifact@v4
         with:
           name: VoidLink-IPA
           path: build/export/*.ipa
+
+
+
+
