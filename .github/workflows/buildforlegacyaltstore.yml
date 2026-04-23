@@ -18,7 +18,6 @@ jobs:
         run: git submodule update --init --recursive
       - name: Fetch Moonlight.xcodeproj from upstream
         run: |
-          # Download from The-Fried-Fish repo's noWaterMark branch (has xcodeproj)
           curl -L -o /tmp/voidlink.tar.gz \
             "https://github.com/The-Fried-Fish/VoidLink-previously-moonlight-zwm/archive/refs/heads/noWaterMark.tar.gz"
           tar -xzf /tmp/voidlink.tar.gz -C /tmp/
@@ -35,8 +34,10 @@ jobs:
         run: xcodebuild -project Moonlight.xcodeproj -list
       - name: Build
         run: |
+          SCHEME=$(xcodebuild -project Moonlight.xcodeproj -list | grep -E "^[A-Za-z]+" | head -1)
+          echo "Using scheme: $SCHEME"
           xcodebuild -project Moonlight.xcodeproj \
-            -scheme Moonlight \
+            -scheme "$SCHEME" \
             -sdk iphoneos \
             -configuration Release archive \
             -archivePath $PWD/build/Moonlight.xcarchive \
