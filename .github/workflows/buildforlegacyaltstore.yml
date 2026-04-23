@@ -10,35 +10,21 @@ jobs:
     name: Build IPA
     runs-on: macos-latest
     steps:
-      - name: Checkout original moonlight-ios with submodules
+      - name: Checkout VoidLink fork with submodules
         run: |
           rm -rf Limelight libs Moonlight.xcodeproj "Supporting Files" "Base.lproj" *.xib *.storyboard X1Kit moonlight-common
-          git clone --recursive https://github.com/moonlight-stream/moonlight-ios.git /tmp/moonlight-ios
-          cp -r /tmp/moonlight-ios/Moonlight.xcodeproj .
-          cp -r /tmp/moonlight-ios/Limelight .
-          cp -r /tmp/moonlight-ios/libs .
-          cp -r /tmp/moonlight-ios/X1Kit .
-          cp -r /tmp/moonlight-ios/moonlight-common .
-          cp -r /tmp/moonlight-ios/*.xib .
-          cp -r /tmp/moonlight-ios/*.storyboard .
-          mkdir -p "Supporting Files" && cp /tmp/moonlight-ios/Supporting\ Files/* "Supporting Files/" 2>/dev/null || true
-          mkdir -p "Base.lproj" && cp /tmp/moonlight-ios/Base.lproj/* "Base.lproj/" 2>/dev/null || true
-          rm -rf /tmp/moonlight-ios
+          git clone --recursive -b noWaterMark https://github.com/The-Fried-Fish/VoidLink-previously-moonlight-zwm.git /tmp/voidlink
+          cp -r /tmp/voidlink/Moonlight.xcodeproj .
+          cp -r /tmp/voidlink/Limelight .
+          cp -r /tmp/voidlink/libs .
+          cp -r /tmp/voidlink/X1Kit .
+          cp -r /tmp/voidlink/moonlight-common .
+          cp -r /tmp/voidlink/*.xib .
+          cp -r /tmp/voidlink/*.storyboard .
+          mkdir -p "Supporting Files" && cp /tmp/voidlink/Supporting\ Files/* "Supporting Files/" 2>/dev/null || true
+          mkdir -p "Base.lproj" && cp /tmp/voidlink/Base.lproj/* "Base.lproj/" 2>/dev/null || true
+          rm -rf /tmp/voidlink
 
-      - name: Fetch VoidLink customizations
-        run: |
-          curl -L -o /tmp/voidlink.tar.gz \
-            "https://github.com/The-Fried-Fish/VoidLink-previously-moonlight-zwm/archive/refs/heads/noWaterMark.tar.gz"
-          tar -xzf /tmp/voidlink.tar.gz -C /tmp/
-          
-          cp /tmp/VoidLink-previously-moonlight-zwm-noWaterMark/Limelight/Input/CommandManager.swift Limelight/Input/ 2>/dev/null || true
-          cp /tmp/VoidLink-previously-moonlight-zwm-noWaterMark/Limelight/Input/OnScreenWidgetView.swift Limelight/Input/ 2>/dev/null || true
-          cp /tmp/VoidLink-previously-moonlight-zwm-noWaterMark/Limelight/ViewControllers/CommandManagerViewController.swift Limelight/ViewControllers/ 2>/dev/null || true
-          cp /tmp/VoidLink-previously-moonlight-zwm-noWaterMark/Limelight/Localization/SwiftLocalizationHelper.swift Limelight/Localization/ 2>/dev/null || true
-          cp /tmp/VoidLink-previously-moonlight-zwm-noWaterMark/Limelight/OrientationHelper.swift Limelight/ 2>/dev/null || true
-          cp /tmp/VoidLink-previously-moonlight-zwm-noWaterMark/Limelight/Moonlight-Bridging-Header.h Limelight/ 2>/dev/null || true
-          
-          rm -rf /tmp/voidlink.tar.gz /tmp/VoidLink-previously-moonlight-zwm-noWaterMark
       - name: Debug - List Swift files
         run: |
           echo "=== Swift files in Limelight/ ==="
