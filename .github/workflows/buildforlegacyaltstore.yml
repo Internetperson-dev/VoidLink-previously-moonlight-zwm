@@ -45,7 +45,7 @@ jobs:
       - name: Build
         run: |
           xcodebuild -project Moonlight.xcodeproj \
-            -scheme Moonlight \
+            -scheme Moonlight-ZWM \
             -sdk iphonesimulator \
             -configuration Release \
             CODE_SIGN_IDENTITY="" \
@@ -54,7 +54,7 @@ jobs:
       - name: Create IPA
         run: |
           mkdir -p ./build/IPA/Payload
-          cp -r ./build/Moonlight.xcarchive/Products/Applications/Moonlight.app ./build/IPA/Payload/Moonlight.app 2>/dev/null || cp -r ~/Library/Developer/Xcode/DerivedData/Moonlight-*/Build/Products/Release-iphonesimulator/Moonlight.app ./build/IPA/Payload/Moonlight.app
+          cp -r ./build/Moonlight.xcarchive/Products/Applications/Moonlight.app ./build/IPA/Payload/Moonlight.app 2>/dev/null || cp -r ~/Library/Developer/Xcode/DerivedData/Moonlight-*/Build/Products/Release-iphonesimulator/Moonlight-ZWM.app ./build/IPA/Payload/Moonlight-ZWM.app
           cd ./build/IPA && zip -r ../../build/Moonlight.ipa ./Payload/*
       - name: Upload IPA to Artifacts
         uses: actions/upload-artifact@v4
