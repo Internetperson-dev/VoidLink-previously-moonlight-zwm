@@ -46,7 +46,16 @@ jobs:
 
       - name: Apply patches for iOS 16 compatibility
         run: |
-          sed -i '' '396,404s/^/\/\/ REMOVED: /' VoidLink/Input/StreamView.m
+          cat > /tmp/patch.m << 'EOF'
+          #import "StreamView.h"
+          @interface StreamView ()
+          - (UIBarButtonItem *)createButtonWithImageNamed:(NSString *)imageName backgroundColor:(UIColor *)bgColor target:(id)target action:(SEL)action keyCode:(int)keyCode isToggleable:(BOOL)isToggleable isDoneButton:(BOOL)isDoneButton;
+          @end
+          EOF
+          
+          sed -i '' '/^@end$/i\
+          - (UIBarButtonItem *)createButtonWithImageNamed:(NSString *)imageName backgroundColor:(UIColor *)bgColor target:(id)target action:(SEL)action keyCode:(int)keyCode isToggleable:(BOOL)isToggleable isDoneButton:(BOOL)isDoneButton;\
+          ' VoidLink/Input/StreamView.h
       - name: List schemes
         run: xcodebuild -project VoidLink.xcodeproj -list
       - name: Build
