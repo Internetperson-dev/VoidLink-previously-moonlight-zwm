@@ -43,6 +43,44 @@ jobs:
               (echo '#include <sys/time.h>'; cat "$f") > "$f.tmp" && mv "$f.tmp" "$f"
             fi
           done
+
+      - name: Create private API stubs patch
+        run: |
+          mkdir -p VoidLink/PrivateHeaders
+          cat > VoidLink/PrivateHeaders/iOS26Private.h << 'EOF'
+          #ifndef iOS26Private_h
+          #define iOS26Private_h
+
+          #import <UIKit/UIKit.h>
+
+          #if !defined(__has_include) || !__has_feature(objc_fixed_size)
+          @interface UIBarButtonItem (iOS26Private)
+          @property (nonatomic, assign) BOOL hidesSharedBackground;
+          @end
+          #endif
+
+          #if !defined(__has_include) || !__has_feature(objc_fixed_size)
+          typedef NS_ENUM(NSInteger, UIGlassEffectStyle) {
+              UIGlassEffectStyleLight,
+              UIGlassEffectStyleClear,
+          };
+
+          @interface UIGlassEffect : UIVisualEffect
+          @property (nonatomic, readonly) UIGlassEffectStyle style;
+          + (UIGlassEffect *)effectWithStyle:(UIGlassEffectStyle)style;
+          @end
+          #endif
+
+          #endif
+          EOF
+
+      - name: Apply patch to StreamView.m
+        run: |
+          if grep -q '#import "iOS26Private.h"' VoidLink/Input/StreamView.m; then
+            echo "Patch already applied"
+          else
+            sed -i '' 's/#import "StreamView.h"/#import "StreamView.h"\n#import "PrivateHeaders\/iOS26Private.h"/' VoidLink/Input/StreamView.m
+          fi
       - name: List schemes
         run: xcodebuild -project VoidLink.xcodeproj -list
       - name: Build
