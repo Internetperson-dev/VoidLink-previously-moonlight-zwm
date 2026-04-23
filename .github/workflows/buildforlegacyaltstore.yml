@@ -91,7 +91,8 @@ jobs:
             -configuration Release \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO
+            CODE_SIGNING_ALLOWED=NO \
+            HEADER_SEARCH_PATHS='$(inherited) "$(SRCROOT)/VoidLink/PrivateHeaders"'
       - name: Create IPA
         run: |
           mkdir -p ./build/IPA/Payload
