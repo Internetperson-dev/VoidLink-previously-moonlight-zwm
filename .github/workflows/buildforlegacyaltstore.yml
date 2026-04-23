@@ -13,7 +13,7 @@ jobs:
       - name: Checkout VoidLink fork with submodules
         run: |
           rm -rf Limelight libs Moonlight.xcodeproj "Supporting Files" "Base.lproj" *.xib *.storyboard X1Kit moonlight-common
-          git clone --recursive -b ReadmeBranch https://github.com/The-Fried-Fish/VoidLink-previously-moonlight-zwm.git /tmp/voidlink
+          git clone --recursive -b noWaterMark https://github.com/The-Fried-Fish/VoidLink-previously-moonlight-zwm.git /tmp/voidlink
           cp -r /tmp/voidlink/Moonlight.xcodeproj .
           cp -r /tmp/voidlink/Limelight .
           cp -r /tmp/voidlink/libs .
