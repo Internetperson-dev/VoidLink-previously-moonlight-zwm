@@ -1,11 +1,7 @@
 # A build of VoidLink designed to be self signed
 
 
-# V这是一个设计为自签名的 VoidLink 版本。（所有中文都是用谷歌翻译的，抱歉。）
-
-
-
-
+V这是一个设计为自签名的 VoidLink 版本。（所有中文都是用谷歌翻译的，抱歉。）
 
 
 # Why?
