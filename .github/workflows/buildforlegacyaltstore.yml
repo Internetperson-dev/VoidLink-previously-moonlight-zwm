@@ -19,10 +19,8 @@ jobs:
           cp -r /tmp/voidlink/libs .
           cp -r /tmp/voidlink/X1Kit .
           cp -r /tmp/voidlink/moonlight-common .
-          cp -r /tmp/voidlink/*.xib .
-          cp -r /tmp/voidlink/*.storyboard .
+          cp -r /tmp/voidlink/Launch\ Screen.xib .
           mkdir -p "Supporting Files" && cp /tmp/voidlink/Supporting\ Files/* "Supporting Files/" 2>/dev/null || true
-          mkdir -p "Base.lproj" && cp /tmp/voidlink/Base.lproj/* "Base.lproj/" 2>/dev/null || true
           rm -rf /tmp/voidlink
 
       - name: Debug - List Swift files
