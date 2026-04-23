@@ -20,7 +20,7 @@ jobs:
           cp -r /tmp/voidlink/X1Kit .
           cp -r /tmp/voidlink/moonlight-common .
           mkdir -p ImGui && cp -r /tmp/voidlink/ImGui/* ImGui/
-          mkdir -p imgui && cp -r /tmp/voidlink/third_party/imgui/imgui/* imgui/
+          mkdir -p imgui && cp -r /tmp/voidlink/third_party/imgui/* imgui/ 2>/dev/null || cp -r /tmp/voidlink/third_party/imgui imgui/
           cp -r /tmp/voidlink/Launch\ Screen.xib .
           mkdir -p "Moonlight TV" && cp /tmp/voidlink/Moonlight\ TV/* "Moonlight TV/" 2>/dev/null || true
           mkdir -p "Supporting Files" && cp /tmp/voidlink/Supporting\ Files/* "Supporting Files/" 2>/dev/null || true
