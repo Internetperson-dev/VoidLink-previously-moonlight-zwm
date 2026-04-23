@@ -1,21 +1,26 @@
 name: Xcode - Build IPA
+
 on:
   push:
     branches: [ "noWaterMark" ]
   pull_request:
     branches: [ "noWaterMark" ]
   workflow_dispatch:
+
 jobs:
   build:
     name: Build IPA
     runs-on: macos-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           submodules: recursive
+
       - name: Checkout submodules
         run: git submodule update --init --recursive
+
       - name: Fetch upstream project and all VoidLink files
         run: |
           curl -L -o /tmp/voidlink.tar.gz \
@@ -23,21 +28,14 @@ jobs:
           tar -xzf /tmp/voidlink.tar.gz -C /tmp/
           cp -r /tmp/VoidLink-previously-moonlight-zwm-noWaterMark/Moonlight.xcodeproj .
           
-          # Copy all VoidLink-added Swift files to Limelight/
-          cp -rn /tmp/VoidLink-previously-moonlight-zwm-noWaterMark/Limelight/CommandManager.swift Limelight/ 2>/dev/null || true
-          cp -rn /tmp/VoidLink-previously-moonlight-zwm-noWaterMark/Limelight/OnScreenWidgetView.swift Limelight/ 2>/dev/null || true
+          # Copy VoidLink-added Swift files
+          cp -rn /tmp/VoidLink-previously-moonlight-zwm-noWaterMark/Limelight/SwiftLocalizationHelper.swift Limelight/Localization/ 2>/dev/null || true
           cp -rn /tmp/VoidLink-previously-moonlight-zwm-noWaterMark/Limelight/OrientationHelper.swift Limelight/ 2>/dev/null || true
           cp -rn /tmp/VoidLink-previously-moonlight-zwm-noWaterMark/Limelight/CommandManagerViewController.swift Limelight/ViewControllers/ 2>/dev/null || true
-          cp -rn /tmp/VoidLink-previously-moonlight-zwm-noWaterMark/Limelight/SwiftLocalizationHelper.swift Limelight/Localization/ 2>/dev/null || true
           cp -rn /tmp/VoidLink-previously-moonlight-zwm-noWaterMark/Limelight/Moonlight-Bridging-Header.h Limelight/ 2>/dev/null || true
           
-          # Also copy custom ObjC files
-          cp -rn /tmp/VoidLink-previously-moonlight-zwm-noWaterMark/Limelight/Input/CustomTapGestureRecognizer.* Limelight/Input/ 2>/dev/null || true
-          cp -rn /tmp/VoidLink-previously-moonlight-zwm-noWaterMark/Limelight/Input/CustomEdgeSlideGestureRecognizer.* Limelight/Input/ 2>/dev/null || true
-          cp -rn /tmp/VoidLink-previously-moonlight-zwm-noWaterMark/Limelight/NativeTouchHandler.* Limelight/Input/ 2>/dev/null || true
-          cp -rn /tmp/VoidLink-previously-moonlight-zwm-noWaterMark/Limelight/NativeTouchPointer.* Limelight/Input/ 2>/dev/null || true
-          
           rm -rf /tmp/voidlink.tar.gz /tmp/VoidLink-previously-moonlight-zwm-noWaterMark
+
       - name: Patch OpenSSL for Xcode 16 compatibility
         run: |
           for f in libs/OpenSSL.xcframework/*/Headers/openssl/crypto.h; do
@@ -45,8 +43,10 @@ jobs:
               printf '#include <sys/time.h>\n%s\n' "$(cat "$f")" > "$f"
             fi
           done
+
       - name: List schemes
         run: xcodebuild -project Moonlight.xcodeproj -list
+
       - name: Build
         run: |
           xcodebuild -project Moonlight.xcodeproj \
@@ -57,11 +57,13 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO
+
       - name: Create IPA
         run: |
           mkdir -p ./build/IPA/Payload
           cp -r ./build/Moonlight.xcarchive/Products/Applications/Moonlight-ZWM.app ./build/IPA/Payload/Moonlight-ZWM.app
           cd ./build/IPA && zip -r ../../build/Moonlight.ipa ./Payload/*
+
       - name: Upload IPA to Artifacts
         uses: actions/upload-artifact@v4
         with:
