@@ -33,11 +33,9 @@ jobs:
 
       - name: Patch OpenSSL for Xcode 16 compatibility
         run: |
-          # Add missing include to OpenSSL headers
-          for f in libs/OpenSSL.xcframework/*/Headers/openssl/*.h; do
-            if ! grep -q '#include <sys/time.h>' "$f" 2>/dev/null; then
-              sed -i.bak '1s/^/#include <sys/time.h>\n/' "$f"
-              rm -f "$f.bak"
+          for f in libs/OpenSSL.xcframework/*/Headers/openssl/crypto.h; do
+            if [ -f "$f" ] && ! grep -q '#include <sys/time.h>' "$f"; then
+              printf '#include <sys/time.h>\n%s\n' "$(cat "$f")" > "$f"
             fi
           done
 
