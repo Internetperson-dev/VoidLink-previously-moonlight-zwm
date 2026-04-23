@@ -21,15 +21,14 @@ jobs:
       - name: Checkout submodules
         run: git submodule update --init --recursive
 
-      - name: Fetch Moonlight.xcodeproj
+      - name: Fetch Moonlight.xcodeproj from upstream
         run: |
-          if [ ! -d "Moonlight.xcodeproj" ]; then
-            curl -L -o /tmp/limelight.tar.gz \
-              "https://github.com/moonlight-stream/moonlight-ios/archive/refs/heads/master.tar.gz"
-            tar -xzf /tmp/limelight.tar.gz -C /tmp/
-            cp -r /tmp/moonlight-ios-master/Moonlight.xcodeproj .
-            rm -rf /tmp/limelight.tar.gz /tmp/moonlight-ios-master
-          fi
+          # Download from The-Fried-Fish repo's noWaterMark branch (has xcodeproj)
+          curl -L -o /tmp/voidlink.tar.gz \
+            "https://github.com/The-Fried-Fish/VoidLink-previously-moonlight-zwm/archive/refs/heads/noWaterMark.tar.gz"
+          tar -xzf /tmp/voidlink.tar.gz -C /tmp/
+          cp -r /tmp/VoidLink-previously-moonlight-zwm-noWaterMark/Moonlight.xcodeproj .
+          rm -rf /tmp/voidlink.tar.gz /tmp/VoidLink-previously-moonlight-zwm-noWaterMark
 
       - name: Patch OpenSSL for Xcode 16 compatibility
         run: |
