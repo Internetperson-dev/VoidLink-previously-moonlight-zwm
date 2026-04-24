@@ -1,30 +1,34 @@
 name: Build VoidLink IPA
 
+permissions:
+  contents: write
+
 on:
-  push:
-    branches: [ "Integration" ]
+  schedule:
+    - cron: '0 0 * * *'
   workflow_dispatch:
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: macos-latest
 
     steps:
-      - name: Checkout repo (with submodules)
-        uses: actions/checkout@v4
-        with:
-          repository: The-Fried-Fish/VoidLink-previously-moonlight-zwm
-          ref: Integration
-          submodules: recursive
+      - name: Clone upstream (with submodules)
+        run: |
+          git clone --recursive --branch Integration \
+          https://github.com/The-Fried-Fish/VoidLink-previously-moonlight-zwm.git external-voidlink
 
-      - name: Show Xcode version
-        run: xcodebuild -version
+      - name: Set build tag
+        run: |
+          echo "TAG_NAME=build-$(date +'%y%m%d-%H%M')" >> $GITHUB_ENV
 
-      - name: List schemes
+      - name: List schemes (debug safety)
+        working-directory: external-voidlink
         run: xcodebuild -list -project VoidLink.xcodeproj
 
-      # Optional patch (keep if you actually hit OpenSSL errors)
-      - name: Patch OpenSSL headers
+      # Optional: keep your OpenSSL fix if needed
+      - name: Patch OpenSSL (if required)
+        working-directory: external-voidlink
         run: |
           find libs/OpenSSL.xcframework -name crypto.h | while read f; do
             if ! grep -q 'sys/time.h' "$f"; then
@@ -32,7 +36,8 @@ jobs:
             fi
           done
 
-      - name: Archive app (unsigned)
+      - name: Archive app
+        working-directory: external-voidlink
         run: |
           xcodebuild \
             -project VoidLink.xcodeproj \
@@ -40,12 +45,16 @@ jobs:
             -configuration Release \
             -sdk iphoneos \
             -archivePath $PWD/build/VoidLink.xcarchive \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             archive
 
       - name: Export IPA
+        working-directory: external-voidlink
         run: |
           mkdir -p build/export
+
           cat > build/exportOptions.plist <<EOF
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
@@ -66,8 +75,17 @@ jobs:
             -exportOptionsPlist build/exportOptions.plist \
             CODE_SIGNING_ALLOWED=NO
 
-      - name: Upload IPA
-        uses: actions/upload-artifact@v4
+      - name: Verify IPA
+        run: |
+          if [ ! -f external-voidlink/build/export/*.ipa ]; then
+            echo "::error::IPA not generated"
+            exit 1
+          fi
+
+      - name: Release IPA
+        uses: marvinpinto/action-automatic-releases@latest
         with:
-          name: VoidLink.ipa
-          path: build/export/*.ipa
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          automatic_release_tag: ${{ env.TAG_NAME }}
+          prerelease: false
+          files: external-voidlink/build/export/*.ipa
