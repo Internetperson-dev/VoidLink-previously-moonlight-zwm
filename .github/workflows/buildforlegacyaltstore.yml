@@ -1,4 +1,4 @@
-name: Xcode - Build IPA
+name: Xcode - Build IPA - With UI Patches for older IOS versions
 on:
   push:
     branches: [ "noWaterMark" ]
