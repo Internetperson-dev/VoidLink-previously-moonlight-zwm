@@ -13,10 +13,12 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      - name: Clone upstream (with submodules)
+      - name: Clone upstream (specific commit before iOS 18 changes)
         run: |
-          git clone --recursive --branch Integration \
-          https://github.com/The-Fried-Fish/VoidLink-previously-moonlight-zwm.git external-voidlink
+          git clone https://github.com/The-Fried-Fish/VoidLink-previously-moonlight-zwm.git external-voidlink
+          cd external-voidlink
+          git checkout e742466409d4c5d94df0e96a155a6d54cf9b1f10
+          git submodule update --init --recursive
 
       - name: Set build tag
         run: |
@@ -24,18 +26,18 @@ jobs:
 
       - name: Select Xcode 16.4
         run: |
-          echo "Available Xcode installations:"
-          ls -d /Applications/Xcode*.app || true
-
           sudo xcode-select -s /Applications/Xcode_16.4.app/Contents/Developer
-
           xcodebuild -version
 
-      - name: List schemes (debug safety)
+      - name: Show schemes
         working-directory: external-voidlink
         run: xcodebuild -list -project VoidLink.xcodeproj
 
-      - name: Archive app
+      - name: Clean build folder
+        working-directory: external-voidlink
+        run: rm -rf build DerivedData
+
+      - name: Archive
         working-directory: external-voidlink
         run: |
           xcodebuild \
@@ -44,47 +46,38 @@ jobs:
             -configuration Release \
             -sdk iphoneos \
             -archivePath $PWD/build/VoidLink.xcarchive \
+            -derivedDataPath $PWD/DerivedData \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             archive
 
-      - name: Export IPA
+      - name: Create IPA
         working-directory: external-voidlink
         run: |
-          mkdir -p build/export
-
-          cat > build/exportOptions.plist <<EOF
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
-          "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-              <key>method</key>
-              <string>development</string>
-              <key>signingStyle</key>
-              <string>manual</string>
-          </dict>
-          </plist>
-          EOF
-
-          xcodebuild -exportArchive \
-            -archivePath build/VoidLink.xcarchive \
-            -exportPath build/export \
-            -exportOptionsPlist build/exportOptions.plist \
-            CODE_SIGNING_ALLOWED=NO
-
-      - name: Verify IPA
-        run: |
-          if ! ls external-voidlink/build/export/*.ipa 1> /dev/null 2>&1; then
-            echo "::error::IPA not generated"
+          APP_PATH=$(find build/VoidLink.xcarchive -name "*.app" | head -n 1)
+          if [ -z "$APP_PATH" ]; then
+            echo "::error::App not found in archive"
             exit 1
           fi
+          mkdir -p build/IPA/Payload
+          cp -r "$APP_PATH" build/IPA/Payload/VoidLink.app
+          cd build/IPA
+          zip -r ../VoidLink.ipa Payload
+          cd ../..
 
-      - name: Release IPA
-        uses: marvinpinto/action-automatic-releases@latest
+      - name: Verify IPA
+        working-directory: external-voidlink
+        run: |
+          if [ ! -f build/VoidLink.ipa ]; then
+            echo "::error::VoidLink.ipa not found!"
+            exit 1
+          fi
+          echo "IPA built successfully"
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          automatic_release_tag: ${{ env.TAG_NAME }}
-          prerelease: false
-          files: external-voidlink/build/export/*.ipa
+          name: VoidLink-${{ env.TAG_NAME }}
+          path: external-voidlink/build/VoidLink.ipa
+          retention-days: 7
