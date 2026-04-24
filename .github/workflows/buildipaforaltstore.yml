@@ -27,12 +27,21 @@ jobs:
           sudo xcode-select -s /Applications/Xcode_16.4.app/Contents/Developer
           xcodebuild -version
 
-      - name: Patch iOS 18 APIs
+      - name: Patch iOS 18 APIs (Swift files)
         working-directory: external-voidlink
         run: |
-          # Remove lines using hidesSharedBackground (iOS 18+ only)
           for f in $(find . -name "*.swift"); do
             sed -i '' '/hidesSharedBackground/d' "$f"
+          done
+
+      - name: Patch iOS 18 APIs (Obj-C files)
+        working-directory: external-voidlink
+        run: |
+          for f in $(find . -name "*.m"); do
+            # Remove hidesSharedBackground lines
+            sed -i '' '/hidesSharedBackground/d' "$f"
+            # Comment out UIGlassEffect usage
+            sed -i '' 's/UIGlassEffect/NSObject/g' "$f"
           done
 
       - name: List schemes
