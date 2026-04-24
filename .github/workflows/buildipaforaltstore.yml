@@ -48,6 +48,18 @@ jobs:
             fi
           done
 
+      - name: Patch StreamView.m for iOS API compatibility
+        run: |
+          # Fix UIBarButtonItem.hidesSharedBackground (not available in target iOS)
+          if [ -f "VoidLink/Input/StreamView.m" ]; then
+            sed -i '' 's/button\.hidesSharedBackground = true;/\/\/ button.hidesSharedBackground = true; (not available in target iOS)/' VoidLink/Input/StreamView.m
+          fi
+          
+          # Fix UIGlassEffect -> UIBlurEffect
+          if [ -f "VoidLink/Input/StreamView.m" ]; then
+            sed -i '' 's/\[UIGlassEffect effectWithStyle:UIGlassEffectStyleClear\]/[UIBlurEffect effectWithStyle:UIBlurEffectStyleSystemUltraThinMaterial]/' VoidLink/Input/StreamView.m
+          fi
+
       - name: List schemes
         run: xcodebuild -project VoidLink.xcodeproj -list
 
