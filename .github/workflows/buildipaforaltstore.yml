@@ -13,12 +13,10 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      - name: Clone upstream (specific commit before iOS 18 changes)
+      - name: Clone upstream (with submodules)
         run: |
-          git clone https://github.com/The-Fried-Fish/VoidLink-previously-moonlight-zwm.git external-voidlink
-          cd external-voidlink
-          git checkout e742466409d4c5d94df0e96a155a6d54cf9b1f10
-          git submodule update --init --recursive
+          git clone --recursive --branch Integration \
+          https://github.com/The-Fried-Fish/VoidLink-previously-moonlight-zwm.git external-voidlink
 
       - name: Set build tag
         run: |
@@ -29,15 +27,21 @@ jobs:
           sudo xcode-select -s /Applications/Xcode_16.4.app/Contents/Developer
           xcodebuild -version
 
-      - name: Show schemes
+      - name: List schemes (debug safety)
         working-directory: external-voidlink
         run: xcodebuild -list -project VoidLink.xcodeproj
 
-      - name: Clean build folder
+      - name: Patch iOS 18 APIs (hidesSharedBackground)
         working-directory: external-voidlink
-        run: rm -rf build DerivedData
+        run: |
+          # Fix hidesSharedBackground - iOS 18+ API not available in Xcode 16.4
+          # Replace with #available check to make it build on older iOS
+          find . -name "*.swift" -exec sed -i '' \
+            -e 's/hidesSharedBackground/false/g' \
+            -e 's/\.hidesSharedBackground = true/.barStyle = .plain/g' \
+            {} \;
 
-      - name: Archive
+      - name: Archive app
         working-directory: external-voidlink
         run: |
           xcodebuild \
@@ -67,13 +71,11 @@ jobs:
           cd ../..
 
       - name: Verify IPA
-        working-directory: external-voidlink
         run: |
-          if [ ! -f build/VoidLink.ipa ]; then
+          if [ ! -f external-voidlink/build/VoidLink.ipa ]; then
             echo "::error::VoidLink.ipa not found!"
             exit 1
           fi
-          echo "IPA built successfully"
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
