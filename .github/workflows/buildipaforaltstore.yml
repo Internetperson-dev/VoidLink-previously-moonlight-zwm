@@ -27,19 +27,12 @@ jobs:
           sudo xcode-select -s /Applications/Xcode_16.4.app/Contents/Developer
           xcodebuild -version
 
-      - name: Patch iOS 18 APIs (Swift)
+      - name: Patch iOS 18 APIs
         working-directory: external-voidlink
         run: |
-          for f in $(find . -name "*.swift" 2>/dev/null); do
-            sed -i '' '/hidesSharedBackground/d' "$f"
-          done
-
-      - name: Patch iOS 18 APIs (Obj-C)
-        working-directory: external-voidlink
-        run: |
-          for f in $(find . -name "*.m" 2>/dev/null); do
-            sed -i '' '/hidesSharedBackground/d' "$f"
-            sed -i '' 's/UIGlassEffect/NSObject/g' "$f"
+          # Patch Swift and Obj-C files - ignore errors with || true
+          for f in $(find . -name "*.swift" -o -name "*.m"); do
+            sed -i '' -e '/hidesSharedBackground/d' -e 's/UIGlassEffect/NSObject/g' "$f" 2>/dev/null || true
           done
 
       - name: List schemes
