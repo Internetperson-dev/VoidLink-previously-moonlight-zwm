@@ -1,0 +1,74 @@
+name: Xcode - Build Regular IPA
+
+on:
+  push:
+    branches: [ "noWaterMark" ]
+  pull_request:
+    branches: [ "noWaterMark" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build IPA
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout VoidLink fork with submodules
+        run: |
+          rm -rf Limelight libs Moonlight.xcodeproj "Supporting Files" "Base.lproj" *.xib *.storyboard X1Kit moonlight-common VoidLink third_party imgui ImGui
+          git clone --recursive -b iOS26UI https://github.com/The-Fried-Fish/VoidLink-previously-moonlight-zwm.git /tmp/voidlink
+          cp -r /tmp/voidlink/VoidLink.xcodeproj .
+          cp -r /tmp/voidlink/VoidLink .
+          cp -r /tmp/voidlink/libs .
+          cp -r /tmp/voidlink/X1Kit .
+          cp -r /tmp/voidlink/moonlight-common .
+          mkdir -p ImGui && cp -r /tmp/voidlink/ImGui/* ImGui/
+          cp -r /tmp/voidlink/third_party .
+          cp -r /tmp/voidlink/Launch\ Screen.xib .
+          mkdir -p "Moonlight TV" && cp /tmp/voidlink/Moonlight\ TV/* "Moonlight TV/" 2>/dev/null || true
+          mkdir -p "Supporting Files" && cp /tmp/voidlink/Supporting\ Files/* "Supporting Files/" 2>/dev/null || true
+          rm -rf /tmp/voidlink
+
+      - name: Debug - List Swift files
+        run: |
+          echo "=== Swift files in Limelight/ ==="
+          ls -la Limelight/*.swift 2>/dev/null || echo "None in root"
+          echo "=== Swift files in Limelight/Input/ ==="
+          ls -la Limelight/Input/*.swift 2>/dev/null || echo "None in Input"
+          echo "=== Swift files in Limelight/ViewControllers/ ==="
+          ls -la Limelight/ViewControllers/*.swift 2>/dev/null || echo "None in ViewControllers"
+          echo "=== Swift files in Limelight/Localization/ ==="
+          ls -la Limelight/Localization/*.swift 2>/dev/null || echo "None in Localization"
+
+      - name: Patch OpenSSL for Xcode 16 compatibility
+        run: |
+          for f in libs/OpenSSL.xcframework/*/Headers/openssl/crypto.h; do
+            if [ -f "$f" ] && ! grep -q '#include <sys/time.h>' "$f"; then
+              (echo '#include <sys/time.h>'; cat "$f") > "$f.tmp" && mv "$f.tmp" "$f"
+            fi
+          done
+
+      - name: List schemes
+        run: xcodebuild -project VoidLink.xcodeproj -list
+
+      - name: Build
+        run: |
+          xcodebuild -project VoidLink.xcodeproj \
+            -scheme VoidLink \
+            -sdk iphonesimulator \
+            -configuration Release \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Create IPA
+        run: |
+          mkdir -p ./build/IPA/Payload
+          cp -r ./build/Moonlight.xcarchive/Products/Applications/Moonlight.app ./build/IPA/Payload/Moonlight.app 2>/dev/null || cp -r ~/Library/Developer/Xcode/DerivedData/VoidLink-*/Build/Products/Release-iphonesimulator/VoidLink.app ./build/IPA/Payload/VoidLink.app
+          cd ./build/IPA && zip -r ../../build/Moonlight.ipa ./Payload/*
+
+      - name: Upload IPA to Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Moonlight.ipa
+          path: build/Moonlight.ipa
