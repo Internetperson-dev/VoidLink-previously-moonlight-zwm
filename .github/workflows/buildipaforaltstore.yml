@@ -16,7 +16,7 @@ jobs:
       - name: Checkout VoidLink fork with submodules
         run: |
           rm -rf Limelight libs Moonlight.xcodeproj "Supporting Files" "Base.lproj" *.xib *.storyboard X1Kit moonlight-common VoidLink third_party imgui ImGui
-          git clone --recursive -b iOS26UI https://github.com/The-Fried-Fish/VoidLink-previously-moonlight-zwm.git /tmp/voidlink
+          git clone --recursive -b Integration https://github.com/The-Fried-Fish/VoidLink-previously-moonlight-zwm.git /tmp/voidlink
           cp -r /tmp/voidlink/VoidLink.xcodeproj .
           cp -r /tmp/voidlink/VoidLink .
           cp -r /tmp/voidlink/libs .
@@ -47,18 +47,6 @@ jobs:
               (echo '#include <sys/time.h>'; cat "$f") > "$f.tmp" && mv "$f.tmp" "$f"
             fi
           done
-
-      - name: Patch StreamView.m for iOS API compatibility
-        run: |
-          # Fix UIBarButtonItem.hidesSharedBackground (not available in target iOS)
-          if [ -f "VoidLink/Input/StreamView.m" ]; then
-            sed -i '' 's/button\.hidesSharedBackground = true;/\/\/ button.hidesSharedBackground = true; (not available in target iOS)/' VoidLink/Input/StreamView.m
-          fi
-          
-          # Fix UIGlassEffect -> UIBlurEffect
-          if [ -f "VoidLink/Input/StreamView.m" ]; then
-            sed -i '' 's/\[UIGlassEffect effectWithStyle:UIGlassEffectStyleClear\]/[UIBlurEffect effectWithStyle:UIBlurEffectStyleSystemUltraThinMaterial]/' VoidLink/Input/StreamView.m
-          fi
 
       - name: List schemes
         run: xcodebuild -project VoidLink.xcodeproj -list
