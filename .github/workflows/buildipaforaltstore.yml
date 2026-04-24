@@ -22,31 +22,18 @@ jobs:
         run: |
           echo "TAG_NAME=build-$(date +'%y%m%d-%H%M')" >> $GITHUB_ENV
 
-      - name: Select newest available Xcode
+      - name: Select Xcode 16.4
         run: |
           echo "Available Xcode installations:"
           ls -d /Applications/Xcode*.app || true
 
-          LATEST_XCODE=$(ls -d /Applications/Xcode*.app | sort -V | tail -n 1)
-
-          echo "Selected Xcode: $LATEST_XCODE"
-          sudo xcode-select -s "$LATEST_XCODE/Contents/Developer"
+          sudo xcode-select -s /Applications/Xcode_16.4.app/Contents/Developer
 
           xcodebuild -version
 
       - name: List schemes (debug safety)
         working-directory: external-voidlink
         run: xcodebuild -list -project VoidLink.xcodeproj
-
-      # Optional: keep your OpenSSL fix if needed
-      - name: Patch OpenSSL (if required)
-        working-directory: external-voidlink
-        run: |
-          find libs/OpenSSL.xcframework -name crypto.h | while read f; do
-            if ! grep -q 'sys/time.h' "$f"; then
-              echo '#include <sys/time.h>' | cat - "$f" > temp && mv temp "$f"
-            fi
-          done
 
       - name: Archive app
         working-directory: external-voidlink
