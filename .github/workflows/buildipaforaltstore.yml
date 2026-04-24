@@ -22,6 +22,18 @@ jobs:
         run: |
           echo "TAG_NAME=build-$(date +'%y%m%d-%H%M')" >> $GITHUB_ENV
 
+      - name: Select newest available Xcode
+        run: |
+          echo "Available Xcode installations:"
+          ls -d /Applications/Xcode*.app || true
+
+          LATEST_XCODE=$(ls -d /Applications/Xcode*.app | sort -V | tail -n 1)
+
+          echo "Selected Xcode: $LATEST_XCODE"
+          sudo xcode-select -s "$LATEST_XCODE/Contents/Developer"
+
+          xcodebuild -version
+
       - name: List schemes (debug safety)
         working-directory: external-voidlink
         run: xcodebuild -list -project VoidLink.xcodeproj
@@ -77,7 +89,7 @@ jobs:
 
       - name: Verify IPA
         run: |
-          if [ ! -f external-voidlink/build/export/*.ipa ]; then
+          if ! ls external-voidlink/build/export/*.ipa 1> /dev/null 2>&1; then
             echo "::error::IPA not generated"
             exit 1
           fi
