@@ -1,10 +1,9 @@
 # IT seems that after the 12th of March the Liquid Glass update was added into the Intergration branch. The problme is that ever since automated builds have broken (outdated XCode?)
 
-
-name: Build VoidLink IPA
+name: Build VoidLink IPA form 2026-04-12
 
 permissions:
-  contents: write
+  contents: read
 
 on:
   schedule:
@@ -13,7 +12,7 @@ on:
 
 jobs:
   build-and-deploy:
-    name: Build and Release VoidLink IPA
+    name: Build VoidLink IPA (Artifact)
     runs-on: macos-latest
 
     steps:
@@ -60,20 +59,16 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             archive
 
-      # ⚠️ Keep manual packaging — this commit still works reliably with it
       - name: Create IPA (manual, stable fallback)
         working-directory: external-voidlink
         run: |
           APP_PATH=$(find build/VoidLink.xcarchive -name "*.app" | head -n 1)
-
           if [ -z "$APP_PATH" ]; then
             echo "::error::App not found in archive"
             exit 1
           fi
-
           mkdir -p build/IPA/Payload
           cp -r "$APP_PATH" build/IPA/Payload/VoidLink.app
-
           cd build/IPA
           zip -r ../VoidLink.ipa Payload
           cd ../..
@@ -87,10 +82,9 @@ jobs:
           fi
           echo "IPA built successfully"
 
-      - name: Release IPA
-        uses: marvinpinto/action-automatic-releases@latest
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          automatic_release_tag: ${{ env.TAG_NAME }}
-          prerelease: false
-          files: external-voidlink/build/VoidLink.ipa
+          name: VoidLink-${{ env.TAG_NAME }}
+          path: external-voidlink/build/VoidLink.ipa
+          retention-days: 7
