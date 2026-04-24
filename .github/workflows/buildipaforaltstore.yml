@@ -23,13 +23,10 @@ jobs:
           echo "TAG_NAME=build-$(date +'%y%m%d-%H%M')" >> $GITHUB_ENV
 
       - name: Show available Xcode versions
-        run: |
-          ls -d /Applications/Xcode*.app
+        run: ls -d /Applications/Xcode*.app || true
 
-      - name: Select Xcode 17.5
-        run: |
-          sudo xcode-select -s /Applications/Xcode_17.5.app/Contents/Developer
-          xcodebuild -version
+      - name: Use default Xcode (let system choose)
+        run: xcodebuild -version
 
       - name: List schemes
         working-directory: external-voidlink
