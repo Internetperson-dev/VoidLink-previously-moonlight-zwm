@@ -1,6 +1,6 @@
-# IT seems that after the 12th of March the Liquid Glass update was added into the Intergration branch. The problme is that ever since automated builds have broken (outdated XCode?)
+# It seems that after the 12th of March the Liquid Glass update was added into the Intergration branch. The problme is that ever since automated builds have broken (outdated XCode?)
 
-name: Build VoidLink IPA form 2026-04-12
+name: Build VoidLink IPA from 2026-04-12
 
 permissions:
   contents: read
